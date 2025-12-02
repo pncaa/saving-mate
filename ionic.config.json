@@ -1,0 +1,8 @@
+{
+  "name": "SavingMate",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite",
+  "id": "c1155650"
+}
