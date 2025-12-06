@@ -1,0 +1,71 @@
+/* Background content */
+.history-bg {
+  --background: #e7e7e9;
+  padding: 15px;
+}
+
+/* Header */
+.header-title {
+  margin-bottom: 15px;
+  text-align: left;
+}
+.header-title h1 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #222;
+}
+
+/* Bulan */
+.month-card {
+  margin-bottom: 20px;
+  --background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.month-card-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+/* Kategori Button */
+.category-buttons {
+  margin-bottom: 20px;
+}
+.category-buttons ion-button {
+  --border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Daftar transaksi */
+.transaction-list {
+  --ion-grid-padding: 0;
+}
+.transaction-row {
+  background: #fff;
+  margin-bottom: 10px;
+  padding: 12px 15px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.transaction-category {
+  font-weight: 500;
+  color: #bdabab;
+}
+.transaction-amount {
+  font-weight: bold;
+  color: #2195ed;
+}
+
+.small-button::part(native) {
+  font-size: 11px; /* teks kecil */
+  font-weight: 500;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}

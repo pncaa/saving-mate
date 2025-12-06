@@ -1,2 +1,55 @@
 /* For information on how to create your own theme, please refer to:
 http://ionicframework.com/docs/theming/ */
+/* Warna tema DANA */
+
+:root {
+  --ion-color-dana-primary: #3C00FF;
+  --ion-color-dana-primary-rgb: 60, 0, 255;
+  --ion-color-dana-primary-contrast: #ffffff;
+  --ion-color-dana-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-dana-primary-shade: #3500e0;
+  --ion-color-dana-primary-tint: #501aff;
+  
+  --ion-color-dana-secondary: #00B2FF;
+  --ion-color-dana-secondary-rgb: 0, 178, 255;
+  --ion-color-dana-secondary-contrast: #ffffff;
+  --ion-color-dana-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-dana-secondary-shade: #009de0;
+  --ion-color-dana-secondary-tint: #1abaff;
+  
+  --ion-color-dana-success: #00D46A;
+  --ion-color-dana-success-rgb: 0, 212, 106;
+  --ion-color-dana-success-contrast: #ffffff;
+  --ion-color-dana-success-contrast-rgb: 255, 255, 255;
+  --ion-color-dana-success-shade: #00bb5d;
+  --ion-color-dana-success-tint: #1ad879;
+  
+  --ion-color-dana-warning: #FFB800;
+  --ion-color-dana-warning-rgb: 255, 184, 0;
+  --ion-color-dana-warning-contrast: #000000;
+  --ion-color-dana-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-dana-warning-shade: #e0a200;
+  --ion-color-dana-warning-tint: #ffbf1a;
+  
+  --ion-color-dana-danger: #FF3B30;
+  --ion-color-dana-danger-rgb: 255, 59, 48;
+  --ion-color-dana-danger-contrast: #ffffff;
+  --ion-color-dana-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-dana-danger-shade: #e0342a;
+  --ion-color-dana-danger-tint: #ff4f45;
+
+  --ion-tab-bar-background: #2195ed;
+
+  /* Jika ingin icon dan teks berwarna putih */
+  --ion-tab-bar-color: #ffffff;
+  --ion-tab-bar-color-selected: #ffffff;
+}
+
+.ion-color-dana-primary {
+  --ion-color-base: var(--ion-color-dana-primary);
+  --ion-color-base-rgb: var(--ion-color-dana-primary-rgb);
+  --ion-color-contrast: var(--ion-color-dana-primary-contrast);
+  --ion-color-contrast-rgb: var(--ion-color-dana-primary-contrast-rgb);
+  --ion-color-shade: var(--ion-color-dana-primary-shade);
+  --ion-color-tint: var(--ion-color-dana-primary-tint);
+}
