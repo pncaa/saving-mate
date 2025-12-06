@@ -1,0 +1,7 @@
+/* Warna dan radius tab bar */
+:root {
+  --ion-tab-bar-background: #2195ed !important;
+  --ion-tab-bar-color: #ffffff !important;
+  --ion-tab-bar-color-selected: #ffffff !important;
+}
+

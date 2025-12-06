@@ -1,0 +1,12 @@
+.bg {
+  --ion-background-color: #2195ed;
+}
+#textname{
+  font-size: 10px;
+}
+.item-line {
+  --border-color: #e0e0e0; /* garis bawah abu-abu */
+  --background: #ffffff;   /* tetap putih */
+  color: black;
+}
+
