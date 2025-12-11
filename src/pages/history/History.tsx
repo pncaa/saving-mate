@@ -15,34 +15,43 @@ import {
 } from "@ionic/react";
 import { calendarOutline } from "ionicons/icons";
 import "./History.css";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabaseClient";
 
 const History: React.FC = () => {
-  const transactions = [
-    { category: "Kendaraan", amount: 2000000, date: "2025-01-03" },
-    { category: "Keluarga", amount: 1500000, date: "2025-02-05" },
-    { category: "Elektronik", amount: 3000000, date: "2025-01-07" },
-    { category: "Liburan Tahunan", amount: 4000000, date: "2024-12-10" },
-    { category: "Kesehatan", amount: 1200000, date: "2025-03-11" },
-    { category: "Hobi", amount: 800000, date: "2025-01-12" },
-    { category: "Makanan", amount: 500000, date: "2024-12-14" },
-  ];
-
-  const [filter, setFilter] = useState<"all" | "income" | "outcome">("all");
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [filter, setFilter] = useState<"all" | "pemasukan" | "pengeluaran">("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>("all");
 
-  // Filter Berdasarkan Income/Outcome
-  const baseFiltered = transactions.filter((t) => {
+  // 🚀 Ambil data transaksi dari Supabase
+  const fetchHistory = async () => {
+    const { data, error } = await supabase
+      .from("transaksi")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Supabase Error:", error);
+      return;
+    }
+
+    setTransactions(data);
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  // Filter Berdasarkan Jenis (pemasukan/pengeluaran)
+  const filteredByJenis = transactions.filter((t) => {
     if (filter === "all") return true;
-    if (filter === "income") return t.amount >= 1000000;
-    if (filter === "outcome") return t.amount < 1000000;
-    return true;
+    return t.jenis === filter;
   });
 
-  // Filter Berdasarkan Tahun & Bulan
-  const finalFiltered = baseFiltered.filter((t) => {
-    const date = new Date(t.date);
+  // Filter Berdasarkan Bulan & Tahun
+  const finalFiltered = filteredByJenis.filter((t) => {
+    const date = new Date(t.created_at);
     const year = date.getFullYear().toString();
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
 
@@ -66,6 +75,7 @@ const History: React.FC = () => {
         <IonCard className="month-card">
           <IonCardContent className="month-card-content">
             <IonIcon icon={calendarOutline} />
+
             <IonSelect
               value={selectedMonth}
               placeholder="Bulan"
@@ -106,7 +116,6 @@ const History: React.FC = () => {
               <IonButton
                 expand="block"
                 fill={filter === "all" ? "solid" : "outline"}
-                className="small-button"
                 onClick={() => setFilter("all")}
               >
                 Keseluruhan
@@ -116,9 +125,8 @@ const History: React.FC = () => {
             <IonCol size="4">
               <IonButton
                 expand="block"
-                fill={filter === "income" ? "solid" : "outline"}
-                className="small-button"
-                onClick={() => setFilter("income")}
+                fill={filter === "pemasukan" ? "solid" : "outline"}
+                onClick={() => setFilter("pemasukan")}
               >
                 Income
               </IonButton>
@@ -127,9 +135,8 @@ const History: React.FC = () => {
             <IonCol size="4">
               <IonButton
                 expand="block"
-                fill={filter === "outcome" ? "solid" : "outline"}
-                className="small-button"
-                onClick={() => setFilter("outcome")}
+                fill={filter === "pengeluaran" ? "solid" : "outline"}
+                onClick={() => setFilter("pengeluaran")}
               >
                 Outcome
               </IonButton>
@@ -143,14 +150,13 @@ const History: React.FC = () => {
             <p className="text-center text-gray-500 mt-4">Tidak ada data.</p>
           )}
 
-          {finalFiltered.map((item, index) => (
+          {finalFiltered.map((item: any, index) => (
             <IonItem key={index} lines="full" className="item-line">
               <IonLabel>
-                <div className="font-medium">{item.category}</div>
+                <div className="font-medium">{item.keterangan}</div>
 
-                {/* Tanggal masuk */}
                 <div className="text-xs text-gray-500 mt-1">
-                  {new Date(item.date).toLocaleDateString("id-ID", {
+                  {new Date(item.created_at).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
@@ -158,13 +164,13 @@ const History: React.FC = () => {
                 </div>
               </IonLabel>
 
-              {item.amount < 1000000 ? (
+              {item.jenis === "pengeluaran" ? (
                 <span className="text-red-500 font-semibold">
-                  - Rp {Math.abs(item.amount).toLocaleString("id-ID")}
+                  - Rp {item.nominal.toLocaleString("id-ID")}
                 </span>
               ) : (
                 <span className="text-green-500 font-semibold">
-                  Rp {item.amount.toLocaleString("id-ID")}
+                  Rp {item.nominal.toLocaleString("id-ID")}
                 </span>
               )}
             </IonItem>

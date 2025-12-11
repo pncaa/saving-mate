@@ -1,104 +1,134 @@
-import { IonButton, IonContent, IonHeader, IonInput, IonItem, IonLabel, IonPage, IonTitle, IonToolbar, IonButtons, IonBackButton, IonText, IonCard } from '@ionic/react';
-import React, { useEffect, useMemo, useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import {
+  IonButton,
+  IonContent,
+  IonHeader,
+  IonInput,
+  IonItem,
+  IonLabel,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonButtons,
+  IonBackButton,
+  IonText,
+  IonCard,
+} from "@ionic/react";
+import React, { useEffect, useState } from "react";
+import { useHistory, useParams } from "react-router-dom";
+import { supabase } from "../../lib/supabaseClient";
 
 interface RouteParams {
   categoryId: string;
   itemId: string;
 }
 
-// Helper to persist amounts per category/item in localStorage
-const STORAGE_KEY = 'savingMate.progress';
-
-type ProgressStore = {
-  [categoryId: string]: {
-    [itemId: string]: number; // currentAmount override
-  }
-};
-
-const readProgress = (): ProgressStore => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-};
-
-const writeProgress = (store: ProgressStore) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-};
+interface DetailData {
+  id: string;
+  nama: string;
+  target: number;
+  nominal: number;
+}
 
 const FormTabungan: React.FC = () => {
   const { categoryId, itemId } = useParams<RouteParams>();
   const history = useHistory();
 
-  // Minimal inline category data mirror to resolve target/current defaults
-  const categories: Record<string, { items: { id: number; name: string; targetAmount: number; currentAmount: number; }[] }> = {
-    '1': { items: [
-      { id: 1, name: 'Motor Honda', targetAmount: 20000000, currentAmount: 5000000 },
-      { id: 2, name: 'Mobil', targetAmount: 150000000, currentAmount: 30000000 },
-    ] },
-    '2': { items: [ { id: 1, name: 'Acara Keluarga', targetAmount: 5000000, currentAmount: 3500000 } ] },
-    '3': { items: [ { id: 1, name: 'Laptop Gaming', targetAmount: 15000000, currentAmount: 2000000 } ] },
-    '4': { items: [
-      { id: 1, name: 'Liburan ke Bali', targetAmount: 10000000, currentAmount: 7000000 },
-      { id: 2, name: 'Liburan ke Jepang', targetAmount: 25000000, currentAmount: 3000000 },
-    ] },
-    '5': { items: [ { id: 1, name: 'Asuransi Kesehatan', targetAmount: 3000000, currentAmount: 1500000 } ] },
-    '6': { items: [
-      { id: 1, name: 'Kursus Online', targetAmount: 5000000, currentAmount: 3000000 },
-      { id: 2, name: 'Beasiswa Anak', targetAmount: 20000000, currentAmount: 5000000 },
-    ] },
-    '7': { items: [ { id: 1, name: 'Hadiah Ulang Tahun', targetAmount: 1000000, currentAmount: 500000 } ] },
-    '8': { items: [
-      { id: 1, name: 'Cicilan Rumah', targetAmount: 50000000, currentAmount: 20000000 },
-      { id: 2, name: 'Hutang Bank', targetAmount: 10000000, currentAmount: 4000000 },
-    ] },
+  const [detail, setDetail] = useState<DetailData | null>(null);
+  const [amount, setAmount] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+
+  useEffect(() => {
+    fetchDetail();
+  }, [categoryId, itemId]);
+
+  const fetchDetail = async () => {
+    setLoading(true);
+    setError("");
+
+    const { data, error: fetchError } = await supabase
+      .from("detail_kategori")
+      .select("id, nama, target, nominal")
+      .eq("id", itemId)
+      .eq("kategori_id", categoryId)
+      .single();
+
+    if (fetchError) {
+      console.error("Gagal memuat detail tabungan:", fetchError);
+      setError("Tidak dapat memuat data tabungan.");
+      setLoading(false);
+      return;
+    }
+
+    setDetail({
+      id: data.id,
+      nama: data.nama,
+      target: Number(data.target) || 0,
+      nominal: Number(data.nominal) || 0,
+    });
+    setLoading(false);
   };
 
-  const item = useMemo(() => {
-    const cat = categories[categoryId];
-    if (!cat) return undefined;
-    return cat.items.find(i => String(i.id) === String(itemId));
-  }, [categoryId, itemId]);
+  const formatRupiah = (n: number) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(n);
 
-  const [amount, setAmount] = useState<string>('');
-  const [current, setCurrent] = useState<number>(item?.currentAmount || 0);
-  const target = item?.targetAmount ?? 0;
+  const calcProgress = (current: number, target: number) =>
+    target > 0 ? Math.min((current / target) * 100, 100) : 0;
 
-  // Load persisted override for current amount
-  useEffect(() => {
-    const store = readProgress();
-    const saved = store[categoryId]?.[itemId];
-    if (typeof saved === 'number') {
-      setCurrent(saved);
-    } else if (item) {
-      setCurrent(item.currentAmount);
-    }
-  }, [categoryId, itemId]);
+  const addSaving = async () => {
+    if (!detail) return;
 
-  const addSaving = () => {
     const add = Number(amount);
-    if (!item) return;
-    if (isNaN(add) || add <= 0) return;
-    // Prevent adding if target already reached or would exceed target
-    if (current >= target) return;
-    const newCurrent = Math.min(current + add, target);
+    if (!add || isNaN(add) || add <= 0) {
+      setError("Nominal harus diisi dengan angka lebih dari 0.");
+      return;
+    }
 
-    const store = readProgress();
-    const catStore = store[categoryId] || {};
-    catStore[itemId] = newCurrent;
-    store[categoryId] = catStore;
-    writeProgress(store);
+    const cappedTotal =
+      detail.target > 0 ? Math.min(detail.nominal + add, detail.target) : detail.nominal + add;
 
-    // Navigate back to detail to see updated progress
+    setSaving(true);
+    setError("");
+
+    const { error: progressError } = await supabase
+      .from("progress_tabungan")
+      .insert({
+        detail_id: detail.id,
+        nominal: add,
+      });
+
+    if (progressError) {
+      console.error("Gagal menyimpan progres:", progressError);
+      setError("Gagal menyimpan progres tabungan.");
+      setSaving(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from("detail_kategori")
+      .update({ nominal: cappedTotal })
+      .eq("id", detail.id);
+
+    if (updateError) {
+      console.error("Gagal memperbarui nominal detail:", updateError);
+      setError("Gagal memperbarui tabungan.");
+      setSaving(false);
+      return;
+    }
+
+    setDetail({ ...detail, nominal: cappedTotal });
+    setAmount("");
+    setSaving(false);
     history.replace(`/detailkategori/${categoryId}`);
   };
 
-  const formatRupiah = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
-  const progress = item ? Math.min((current / item.targetAmount) * 100, 100) : 0;
-  const isTargetReached = current >= target;
+  const progress = detail ? calcProgress(detail.nominal, detail.target) : 0;
+  const isTargetReached = detail ? detail.target > 0 && detail.nominal >= detail.target : false;
 
   return (
     <IonPage>
@@ -111,23 +141,35 @@ const FormTabungan: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
-        {item && (
+        {loading && (
+          <div className="px-4 pt-4">
+            <p className="text-sm text-gray-500">Memuat data tabungan...</p>
+          </div>
+        )}
+
+        {!loading && detail && (
           <div className="px-4 pt-4">
             <IonCard className="p-4 rounded-2xl bg-white">
-              <h2 className="text-base font-semibold text-gray-800 mb-2">{item.name}</h2>
+              <h2 className="text-base font-semibold text-gray-800 mb-2">{detail.nama}</h2>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-600">Terkumpul</span>
-                <span className="font-semibold text-blue-600">{formatRupiah(current)}</span>
+                <span className="font-semibold text-blue-600">{formatRupiah(detail.nominal)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Target</span>
-                <span className="font-semibold text-gray-800">{formatRupiah(item.targetAmount)}</span>
+                <span className="font-semibold text-gray-800">{formatRupiah(detail.target)}</span>
               </div>
               <div className="bg-gray-200 rounded-full h-2 overflow-hidden mt-3">
                 <div className="bg-blue-600 h-full rounded-full" style={{ width: `${progress}%` }} />
               </div>
               <p className="text-xs text-gray-500 text-right mt-1">{progress.toFixed(1)}%</p>
             </IonCard>
+          </div>
+        )}
+
+        {!loading && !detail && (
+          <div className="px-4 pt-4">
+            <p className="text-sm text-red-500">Data tabungan tidak ditemukan.</p>
           </div>
         )}
 
@@ -138,18 +180,27 @@ const FormTabungan: React.FC = () => {
               type="number"
               placeholder="Masukkan nominal (IDR)"
               value={amount}
-              onIonChange={e => setAmount(String(e.detail.value || ''))}
-              disabled={isTargetReached}
+              onIonChange={(e) => setAmount(String(e.detail.value || ""))}
+              disabled={isTargetReached || !detail}
             />
           </IonItem>
           <div className="px-1 mt-3">
-            <IonButton expand="block" onClick={addSaving} disabled={isTargetReached}>Simpan</IonButton>
+            <IonButton
+              expand="block"
+              onClick={addSaving}
+              disabled={isTargetReached || saving || !detail}
+            >
+              {saving ? "Menyimpan..." : "Simpan"}
+            </IonButton>
           </div>
           <div className="px-1 mt-2">
-            {!isTargetReached ? (
-              <IonText color="medium">Input hanya jumlah uang yang ditambahkan.</IonText>
-            ) : (
-              <IonText color="danger">Target telah tercapai. Tidak bisa menambah lagi.</IonText>
+            {error && <IonText color="danger">{error}</IonText>}
+            {!error && (
+              <IonText color="medium">
+                {!isTargetReached
+                  ? "Input hanya jumlah uang yang ditambahkan."
+                  : "Target telah tercapai. Tidak bisa menambah lagi."}
+              </IonText>
             )}
           </div>
         </div>
