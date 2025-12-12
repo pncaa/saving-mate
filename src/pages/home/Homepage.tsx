@@ -73,6 +73,7 @@ const Homepage: React.FC = () => {
   const [incomeTotal, setIncomeTotal] = useState<number>(0);
   const [outcomeTotal, setOutcomeTotal] = useState<number>(0);
   const [tabunganTotal, setTabunganTotal] = useState<number>(0);
+  const [tabunganBebasTotal, setTabunganBebasTotal] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
   const now = useMemo(() => new Date(), []);
@@ -84,7 +85,7 @@ const Homepage: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
-    await Promise.all([fetchCategories(), fetchTransactions()]);
+    await Promise.all([fetchCategories(), fetchTransactions(), fetchTabunganBebas()]);
     setLoading(false);
   };
 
@@ -160,10 +161,26 @@ const Homepage: React.FC = () => {
     setTransactions((data || []) as TransactionItem[]);
   };
 
+  const fetchTabunganBebas = async () => {
+    const { data, error } = await supabase
+      .from("saldo_tabungan")
+      .select("total")
+      .order("id", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Supabase saldo_tabungan error:", error);
+      return;
+    }
+
+    setTabunganBebasTotal(Number(data?.total) || 0);
+  };
+
   const formatRupiah = (n: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
 
-  const grandTotal = tabunganTotal + incomeTotal;
+  const grandTotal = tabunganTotal + tabunganBebasTotal;
 
   return (
     <IonPage>
@@ -178,7 +195,7 @@ const Homepage: React.FC = () => {
                 {formatRupiah(grandTotal)}
               </h1>
               <p className="text-white/80 text-xs">
-                Tabungan Income: {formatRupiah(incomeTotal)}
+                Tabungan Bebas: {formatRupiah(tabunganBebasTotal)}
               </p>
             </div>
 

@@ -53,6 +53,8 @@ const Save: React.FC = () => {
   const history = useHistory();
   const [menuItems, setMenuItems] = useState<Kategori[]>([]);
 
+  const totalSemuaKategori = menuItems.reduce((sum, item) => sum + item.total, 0);
+
   useEffect(() => {
     fetchKategori();
   }, []);
@@ -116,6 +118,10 @@ const Save: React.FC = () => {
               "Masa depan cerah bukan hasil keberuntungan, tapi dari kebiasaan yang disiplin
               seperti menabung."
             </p>
+            <div className="mt-3 bg-white/15 rounded-2xl px-3 py-2 backdrop-blur-sm">
+              <p className="text-white/80 text-xs">Total saldo tabungan kategori</p>
+              <p className="text-white text-lg font-bold">{formatRupiah(totalSemuaKategori)}</p>
+            </div>
           </div>
         </div>
 
