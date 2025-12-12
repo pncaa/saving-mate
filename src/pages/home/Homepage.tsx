@@ -187,28 +187,33 @@ const Homepage: React.FC = () => {
       <IonContent fullscreen className="bg">
         {/* ===== BAGIAN ATAS (BACKGROUND BIRU) ===== */}
         <div className="px-4 pt-6 pb-32 bg-[#2195ed]">
-          <div className="grid grid-cols-2 items-center gap-4">
-            <div className="space-y-1">
-              <h1 className="text-white text-xl font-semibold">Hi Kamu</h1>
-              <p className="text-white/80 text-sm">Ringkasan bulan {monthLabel}</p>
-              <h1 className="text-white text-xl font-semibold mt-1">
-                {formatRupiah(grandTotal)}
-              </h1>
-              <p className="text-white/80 text-xs">
-                Tabungan Bebas: {formatRupiah(tabunganBebasTotal)}
-              </p>
-            </div>
-
-            <div className="flex justify-center">
-              <div className="bg-white rounded-full p-1 shadow-md flex items-center justify-center overflow-hidden w-24 h-24">
-                <Lottie
-                  animationData={saveMoney}
-                  loop={true}
-                  style={{ width: 160, height: 160 }}
-                />
-              </div>
+          <div className="flex flex-col items-center mb-6">
+            <h1 className="text-white text-xl font-semibold mb-2">Hi Kamu</h1>
+            <p className="text-white/80 text-sm mb-4">Ayo menabung untuk masa depan yang lebih baik</p>
+            <div className="bg-white rounded-full p-1 shadow-md flex items-center justify-center overflow-hidden w-30 h-30">
+              <Lottie
+                animationData={saveMoney}
+                loop={true}
+                style={{ width: 140, height: 140 }}
+              />
             </div>
           </div>
+
+          {/* Card untuk Total Keseluruhan */}
+          <IonCard className="bg-white/10 backdrop-blur-md rounded-2xl px-4 py-3 shadow-md mb-4 border border-white/20">
+            <p className="text-white/80 text-sm">Total Keseluruhan {monthLabel}</p>
+            <h1 className="text-white text-2xl font-bold mt-1">
+              {formatRupiah(grandTotal)}
+            </h1>
+          </IonCard>
+
+          {/* Card untuk Tabungan Bebas */}
+          <IonCard className="bg-white/10 backdrop-blur-md rounded-2xl px-4 py-3 shadow-md mb-4 border border-white/20">
+            <p className="text-white/80 text-sm">Tabungan Bebas</p>
+            <h2 className="text-white text-xl font-semibold mt-1">
+              {formatRupiah(tabunganBebasTotal)}
+            </h2>
+          </IonCard>
 
           <div className="grid grid-cols-2 gap-3 mt-6">
             <IonCard className="bg-white rounded-2xl px-4 py-3 shadow-md">
