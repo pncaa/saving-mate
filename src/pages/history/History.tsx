@@ -20,6 +20,7 @@ import { supabase } from "../../lib/supabaseClient";
 
 const History: React.FC = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [completedSavings, setCompletedSavings] = useState<any[]>([]);
   const [filter, setFilter] = useState<"all" | "pemasukan" | "pengeluaran">("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>("all");
@@ -39,8 +40,24 @@ const History: React.FC = () => {
     setTransactions(data);
   };
 
+  const fetchCompletedSavings = async () => {
+    const { data, error } = await supabase
+      .from("detail_kategori")
+      .select("id, nama, target, nominal, created_at")
+      .eq("is_selesai", true)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Supabase Completed Savings Error:", error);
+      return;
+    }
+
+    setCompletedSavings(data || []);
+  };
+
   useEffect(() => {
     fetchHistory();
+    fetchCompletedSavings();
   }, []);
 
   // Filter Berdasarkan Jenis (pemasukan/pengeluaran)
@@ -172,10 +189,38 @@ const History: React.FC = () => {
                 <span className="text-green-500 font-semibold">
                   Rp {item.nominal.toLocaleString("id-ID")}
                 </span>
-              )}
+            )}
+          </IonItem>
+        ))}
+      </IonGrid>
+
+      {/* Riwayat Tabungan Selesai */}
+      <div className="px-4 mt-6">
+        <h2 className="text-md font-semibold mb-3">Riwayat Tabungan Selesai</h2>
+        <IonGrid className="transaction-list">
+          {completedSavings.length === 0 && (
+            <p className="text-center text-gray-500 mt-2">Belum ada tabungan selesai.</p>
+          )}
+          {completedSavings.map((item: any) => (
+            <IonItem key={item.id} lines="full" className="item-line">
+              <IonLabel>
+                <div className="font-medium">{item.nama}</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {new Date(item.created_at).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </div>
+              </IonLabel>
+              <div className="text-right text-xs text-gray-600">
+                <div>Terkumpul: Rp {Number(item.nominal || 0).toLocaleString("id-ID")}</div>
+                <div>Target: Rp {Number(item.target || 0).toLocaleString("id-ID")}</div>
+              </div>
             </IonItem>
           ))}
         </IonGrid>
+      </div>
       </IonContent>
     </IonPage>
   );

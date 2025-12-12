@@ -67,6 +67,7 @@ const Save: React.FC = () => {
         nama,
         target,
         detail_kategori (
+          is_selesai,
           nominal,
           progress_tabungan ( nominal )
         )
@@ -80,6 +81,7 @@ const Save: React.FC = () => {
 
     const items = data.map((d: any) => {
       const total = d.detail_kategori?.reduce((sum: number, item: any) => {
+        if (item.is_selesai) return sum;
         const progresTotal = (item.progress_tabungan || []).reduce(
           (acc: number, prog: any) => acc + Number(prog.nominal || 0),
           0

@@ -10,6 +10,7 @@ import {
   IonIcon,
   IonFab,
   IonFabButton,
+  IonButton,
 } from "@ionic/react";
 import { useHistory, useParams } from "react-router-dom";
 import { add } from "ionicons/icons";
@@ -37,6 +38,7 @@ interface DetailItem {
   nominal: number;
   target: number;
   created_at: string;
+  is_selesai?: boolean;
 }
 
 interface CategoryProgress {
@@ -75,6 +77,8 @@ const DetailKategori: React.FC = () => {
   const [categoryProgress, setCategoryProgress] = useState<CategoryProgress | null>(null);
   const [detailItems, setDetailItems] = useState<DetailItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [completingId, setCompletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -94,8 +98,9 @@ const DetailKategori: React.FC = () => {
         .single(),
       supabase
         .from("detail_kategori")
-        .select("id, nama, target, nominal, created_at, progress_tabungan ( nominal )")
+        .select("id, nama, target, nominal, created_at, is_selesai, progress_tabungan ( nominal )")
         .eq("kategori_id", categoryId)
+        .eq("is_selesai", false)
         .order("created_at", { ascending: true }),
     ]);
 
@@ -117,6 +122,7 @@ const DetailKategori: React.FC = () => {
         target: Number(d.target) || 0,
         nominal: currentNominal,
         created_at: d.created_at as string,
+        is_selesai: d.is_selesai as boolean,
       };
     });
 
@@ -131,6 +137,26 @@ const DetailKategori: React.FC = () => {
       progress_persen: progressValue,
     });
     setLoading(false);
+  };
+
+  const handleComplete = async (detailId: string, name: string) => {
+    const ok = window.confirm(`Tandai tabungan "${name}" sebagai selesai?`);
+    if (!ok) return;
+
+    setCompletingId(detailId);
+    const { error } = await supabase
+      .from("detail_kategori")
+      .update({ is_selesai: true })
+      .eq("id", detailId);
+
+    if (error) {
+      console.error("Gagal menandai selesai:", error);
+      setCompletingId(null);
+      return;
+    }
+
+    await fetchData();
+    setCompletingId(null);
   };
 
   const formatRupiah = (amount: number) =>
@@ -221,7 +247,21 @@ const DetailKategori: React.FC = () => {
                   history.push(`/formtabungan/${categoryId}/${item.id}`)
                 }
               >
-                <h4 className="text-base font-semibold text-gray-800">{item.nama}</h4>
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="text-base font-semibold text-gray-800">{item.nama}</h4>
+                  <IonButton
+                    size="small"
+                    color="success"
+                    fill="clear"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleComplete(item.id, item.nama);
+                    }}
+                    disabled={completingId === item.id}
+                  >
+                    {completingId === item.id ? "Menyelesaikan..." : "Selesai"}
+                  </IonButton>
+                </div>
 
                 <p className="text-xs text-gray-500 mt-1">
                   Ditambahkan:{" "}
